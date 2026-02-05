@@ -1,0 +1,6 @@
+# One font file path per line.
+# Example:
+/Users/astrakhantsev/Library/Fonts/Unbounded-Regular.ttf
+/Library/Fonts/Montserrat-Medium.ttf
+/Library/Fonts/Rubik-VariableFont_wght.ttf
+ 
