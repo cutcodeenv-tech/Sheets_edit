@@ -23,7 +23,7 @@ from typing import Dict, List, Optional, Sequence, Tuple
 import requests
 from pathlib import Path
 
-from sheet_cache import csv_path_for_sheet, prompt_project_context, read_csv_rows, write_csv_rows
+from sheet_cache import csv_path_for_sheet, read_csv_rows, resolve_project, write_csv_rows
 
 
 DEFAULT_SETTINGS = {
@@ -50,17 +50,6 @@ SESSION_HEADERS = {
     ),
     "Accept": "text/html,application/json;q=0.9,*/*;q=0.8",
 }
-
-
-def input_nonempty(prompt: str, default: Optional[str] = None) -> str:
-    while True:
-        suffix = f" [{default}]" if default is not None else ""
-        value = input(f"{prompt}{suffix}: ").strip()
-        if value:
-            return value
-        if default is not None:
-            return default
-        print("Значение не может быть пустым. Повторите ввод.")
 
 
 def column_label(index: int) -> str:
@@ -102,76 +91,22 @@ class Settings:
 
 
 def read_settings_from_user() -> Settings:
-    batch_size = int(
-        input_nonempty("Размер партии (batch_size)", str(DEFAULT_SETTINGS["batch_size"]))
-    )
-    max_runtime_seconds = float(
-        input_nonempty(
-            "Макс. время работы, сек",
-            f'{DEFAULT_SETTINGS["max_runtime_seconds"]:.0f}',
-        )
-    )
-    sleep_seconds = float(
-        input_nonempty(
-            "Пауза между запросами (сек)",
-            f'{DEFAULT_SETTINGS["sleep_seconds"]:.3f}',
-        )
-    )
-    force_refresh = (
-        input_nonempty(
-            "Перезаписывать уже заполненные значения? (y/n)",
-            "n" if not DEFAULT_SETTINGS["force_refresh"] else "y",
-        ).lower()
-        in {"y", "yes", "д", "да", "true", "1"}
-    )
-    log_to_sheet = (
-        input_nonempty(
-            "Писать лог в отдельный лист? (y/n)",
-            "y" if DEFAULT_SETTINGS["log_to_sheet"] else "n",
-        ).lower()
-        in {"y", "yes", "д", "да", "true", "1"}
-    )
-    log_sheet_name = input_nonempty(
-        "Имя лог-листа", DEFAULT_SETTINGS["log_sheet_name"]
-    )
-    use_cache = (
-        input_nonempty(
-            "Использовать кеш в отдельном листе? (y/n)",
-            "y" if DEFAULT_SETTINGS["use_cache"] else "n",
-        ).lower()
-        in {"y", "yes", "д", "да", "true", "1"}
-    )
-    cache_sheet_name = input_nonempty(
-        "Имя листа для кеша", DEFAULT_SETTINGS["cache_sheet_name"]
-    )
-    url_header = input_nonempty("Заголовок колонки с URL", DEFAULT_SETTINGS["url_header"])
-    write_column_letter = input_nonempty(
-        "Столбец для записи (буква)", DEFAULT_SETTINGS["write_column"]
-    )
-    write_header = input_nonempty(
-        "Заголовок столбца для результатов", DEFAULT_SETTINGS["write_header"]
-    )
-    channel_header = input_nonempty(
-        "Заголовок столбца с названием канала", DEFAULT_SETTINGS["channel_header"]
-    )
-
-    write_column = column_index(write_column_letter)
+    write_column = column_index(DEFAULT_SETTINGS["write_column"])
     channel_column = write_column + 1
-
     return Settings(
-        batch_size=batch_size,
-        max_runtime_seconds=max_runtime_seconds,
-        sleep_seconds=sleep_seconds,
-        force_refresh=force_refresh,
-        log_to_sheet=log_to_sheet,
-        log_sheet_name=log_sheet_name,
-        use_cache=use_cache,
-        cache_sheet_name=cache_sheet_name,
-        url_header=url_header,
+        batch_size=DEFAULT_SETTINGS["batch_size"],
+        max_runtime_seconds=DEFAULT_SETTINGS["max_runtime_seconds"],
+        sleep_seconds=DEFAULT_SETTINGS["sleep_seconds"],
+        force_refresh=DEFAULT_SETTINGS["force_refresh"],
+        log_to_sheet=DEFAULT_SETTINGS["log_to_sheet"],
+        log_sheet_name=DEFAULT_SETTINGS["log_sheet_name"],
+        use_cache=DEFAULT_SETTINGS["use_cache"],
+        cache_sheet_name=DEFAULT_SETTINGS["cache_sheet_name"],
+        url_header=DEFAULT_SETTINGS["url_header"],
         write_column=write_column,
-        write_header=write_header.strip() or DEFAULT_SETTINGS["write_header"],
+        write_header=DEFAULT_SETTINGS["write_header"],
         channel_column=channel_column,
-        channel_header=channel_header.strip() or DEFAULT_SETTINGS["channel_header"],
+        channel_header=DEFAULT_SETTINGS["channel_header"],
     )
 
 
@@ -438,7 +373,7 @@ def enrich_titles(
 def main() -> None:
     print("=== Парсер Title/Channel → соседние столбцы ===")
     try:
-        project = prompt_project_context("Проект (Enter = последняя): ")
+        project = resolve_project(None, allow_remote=False)
     except Exception as exc:
         print(f"Ошибка: {exc}")
         sys.exit(1)

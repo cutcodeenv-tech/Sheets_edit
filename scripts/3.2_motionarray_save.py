@@ -195,11 +195,11 @@ def paste_and_confirm(delay_before_paste: float, delay_before_enter: float) -> b
         'tell application "System Events"\n'
         f"    delay {max(delay_before_paste, 0):.2f}\n"
         '    keystroke "a" using {command down}\n'
-        "    delay 0.1\n"
+        "    delay 0.05\n"
         '    keystroke "v" using {command down}\n'
-        "    delay 0.2\n"
-        '    keystroke "a" using {command down}\n'
         "    delay 0.1\n"
+        '    keystroke "a" using {command down}\n'
+        "    delay 0.05\n"
         '    keystroke "v" using {command down}\n'
         f"    delay {max(delay_before_enter, 0):.2f}\n"
         "    key code 36\n"
@@ -498,16 +498,16 @@ def main() -> None:
     first_click = (1568, 702)
     second_click = (1504, 800)
 
-    delay_before_clicks = 5.0
-    delay_between_clicks = 5.0
+    delay_before_clicks = 2.5
+    delay_between_clicks = 2.5
     delay_before_dialog = 7.0
-    delay_between_paste_and_enter = 5.0
-    delay_after_enter = 5.0
+    delay_between_paste_and_enter = 2.5
+    delay_after_enter = 2.5
 
     download_label = "Download"
-    hd_label = "HD"
+    hd_label = "Original"
     download_terms = ["Download"]
-    hd_terms = ["HD", "Original"]
+    hd_terms = ["Original"]
     fallback_on_fail = True
 
     csv_path = csv_path_for_sheet(project, sheet_name)

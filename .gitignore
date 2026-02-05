@@ -9,3 +9,5 @@ analysis_out/
 wizard_state.json
 *.json
 peak-hangout-*.json
+# Playwright state
+scripts/.state/
